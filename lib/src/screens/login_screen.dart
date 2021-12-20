@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../mixins/validation_mixin.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -7,8 +8,16 @@ class LoginScreen extends StatefulWidget {
   _LoginScreenState createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends State<LoginScreen> with ValidationMixin {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
+  String email = '';
+  String password = '';
+
+  submitData(email, password) {
+    print(
+        'here you can consume the email:$email and password:$password in an api or something');
+  }
 
   @override
   Widget build(context) {
@@ -21,6 +30,7 @@ class _LoginScreenState extends State<LoginScreen> {
           children: <Widget>[
             emailField(),
             passwordField(),
+            Container(margin: const EdgeInsets.only(top: 15.0)),
             submitButton(),
           ],
         ),
@@ -35,11 +45,9 @@ class _LoginScreenState extends State<LoginScreen> {
         hintText: 'Enter your email',
         icon: Icon(Icons.person),
       ),
-      validator: (String? value) {
-        if (value == null || value.isEmpty) {
-          return 'Please enter an email address';
-        }
-        return null;
+      validator: validateEmail,
+      onSaved: (value) {
+        email = value.toString();
       },
     );
   }
@@ -51,29 +59,30 @@ class _LoginScreenState extends State<LoginScreen> {
         hintText: 'Enter your password',
         icon: Icon(Icons.password_sharp),
       ),
-      validator: (String? value) {
-        if (value == null || value.isEmpty) {
-          return 'Please enter a password';
-        }
-        return null;
+      validator: validatePassword,
+      onSaved: (String? value) {
+        password = value.toString();
       },
     );
   }
 
   Widget submitButton() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 15.0),
-      child: ElevatedButton(
-        onPressed: () {
-          // Validate will return true if the form is valid, or false if
-          // the form is invalid.
-          if (_formKey.currentState!.validate()) {
-            // Process data.
-            print(_formKey);
-          }
-        },
-        child: const Text('Submit'),
+    return ElevatedButton(
+      child: const Text('Submit'),
+      style: ButtonStyle(
+        backgroundColor: MaterialStateProperty.all<Color>(Colors.blue.shade600),
       ),
+      onPressed: () {
+        // Validate will return true if the form is valid, or false if
+        // the form is invalid. Validation set in validator() on TextFormField
+        if (_formKey.currentState!.validate()) {
+          // Process data.
+          _formKey.currentState!
+              .save(); // triggers onSave function on TextFormField
+          submitData(email, password);
+          _formKey.currentState!.reset();
+        }
+      },
     );
   }
 }
